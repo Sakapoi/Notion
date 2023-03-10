@@ -1,0 +1,18 @@
+[package]
+name = "Notion"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.69"
+clap = { version = "4.1.8", features = ["derive"] }
+config = "0.13.3"
+crossbeam-channel = "0.5.7"
+notion = "0.5.1"
+reqwest = "0.11.14"
+serde = "1.0.154"
+skim = "0.10.4"
+tokio = "1.26.0"
+toml = "0.7.2"

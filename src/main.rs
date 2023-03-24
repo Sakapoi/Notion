@@ -1,5 +1,6 @@
 use reqwest::{Client, Error};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize)]
 struct NotionPage {
@@ -61,6 +62,7 @@ struct Start {
     start: String,
 }
 
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let client = Client::new();
@@ -76,13 +78,13 @@ async fn main() -> Result<(), Error> {
                 title: vec![Text {
                     type_: String::from("text"),
                     text: Content {
-                        content: String::from("Cucumbers"),
+                        content: String::from("Oleg"),
                     },
                 }],
             },
             Price: Number {
                 type_: String::from("number"),
-                number: 300,
+                number: 1337,
             },
             last_ordered: Date {
                 type_: String::from("date"),
@@ -90,10 +92,51 @@ async fn main() -> Result<(), Error> {
                     start: String::from("2021-04-11"),
                 },
             },
+
+            
         },
+
+        
     };
 
-    let response = client
+    
+    
+    //get info from db
+    let get_response = reqwest::Client::new()
+        .post("https://api.notion.com/v1/databases/35fd9e0dda20451297b9153388941669/query")
+        .header("Authorization", "Bearer secret_t3oEqeeKdfn2vLAskJlj4nGavuM6fnKs9Tf833moaFT")
+        .header("Content-Type", "application/json")
+        .header("Notion-Version", "2022-06-28")
+        .send()
+        .await?
+        .json::<serde_json::Value>()
+        .await?;
+
+    println!("{:?}", get_response);
+
+    let row_ids = get_response["results"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| row["id"].as_str().unwrap().to_string())
+        .collect::<Vec<String>>();
+
+    //println!("{:?}", row_ids);
+
+    for row_id in row_ids {
+        let delete_response = reqwest::Client::new()
+            .delete(&format!("https://api.notion.com/v1/blocks/{}", row_id))
+            .header("Authorization", "Bearer secret_t3oEqeeKdfn2vLAskJlj4nGavuM6fnKs9Tf833moaFT")
+            .header("Notion-Version", "2022-06-28")
+            .send()
+            .await?
+            .text()
+            .await?;
+        println!("Row deleted: {}", delete_response);
+    }
+
+    //add info to a db
+    let add_response = client
         .post("https://api.notion.com/v1/pages")
         .header("Authorization", "Bearer secret_t3oEqeeKdfn2vLAskJlj4nGavuM6fnKs9Tf833moaFT")
         .header("Content-Type", "application/json")
@@ -102,7 +145,7 @@ async fn main() -> Result<(), Error> {
         .send()
         .await?;
 
-    println!("{:?}", response);
+    //println!("{:?}", response);
 
     Ok(())
 }
